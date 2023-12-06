@@ -3,13 +3,13 @@ package handlers
 import (
 	"errors"
 	"fmt"
+	"strings"
+
 	"github.com/eatmoreapple/openwechat"
 	"github.com/qingconglaixueit/abing_logger"
 	"github.com/qingconglaixueit/wechatbot/config"
 	"github.com/qingconglaixueit/wechatbot/gpt"
-	"github.com/qingconglaixueit/wechatbot/rule"
 	"github.com/qingconglaixueit/wechatbot/service"
-	"strings"
 )
 
 var _ MessageHandlerInterface = (*UserMessageHandler)(nil)
@@ -78,33 +78,20 @@ func (h *UserMessageHandler) ReplyText() error {
 		return nil
 	}
 	abing_logger.SugarLogger.Info(fmt.Sprintf("h.sender.NickName == %+v", h.sender.NickName))
-	// 只有 vip 用户才能私聊
-	if rule.Grule.InSlice(h.sender.NickName, VipUserList) {
-		if ToTalNumber != 0 {
-			ToTalNumber = ToTalNumber + 1
-		} else {
-			tmp, err := rule.Grule.GetNum(numberFile)
-			if err != nil {
-				abing_logger.SugarLogger.Warn("rule.Grule.GetNum error ", err)
-			}
-			ToTalNumber = tmp + 1
-		}
-		if err := rule.Grule.WriteNum(ToTalNumber,numberFile); err != nil {
-			abing_logger.SugarLogger.Warn("rule.Grule.WriteNum error ", err)
-		}
-		// 2.向GPT发起请求，如果回复文本等于空,不回复
-		reply, err = gpt.Completions(h.getRequestText())
+	// 2.向GPT发起请求，如果回复文本等于空,不回复
+
+	reply, err = gpt.Completions(h.getRequestText())
+	if err != nil {
+		// 2.1 将GPT请求失败信息输出给用户。
+		errMsg := fmt.Sprintf("%v", err)
+		_, err = h.msg.ReplyText(errMsg)
 		if err != nil {
-			// 2.1 将GPT请求失败信息输出给用户，省得整天来问又不知道日志在哪里。
-			errMsg := fmt.Sprintf("gpt request error: %v", err)
-			_, err = h.msg.ReplyText(errMsg)
-			if err != nil {
-				return errors.New(fmt.Sprintf("response user error: %v ", err))
-			}
-			return err
+			return errors.New(fmt.Sprintf("response user error: %v ", err))
 		}
+		return err
 	}
-	if reply != ""{
+
+	if reply != "" {
 		// 2.设置上下文，回复用户
 		h.service.SetUserSessionContext(requestText, reply)
 		_, err = h.msg.ReplyText(buildUserReply(reply))
@@ -156,7 +143,7 @@ func buildUserReply(reply string) string {
 
 	reply = strings.TrimSpace(reply)
 	if reply == "" {
-		return "请求得不到任何有意义的回复，请具体提出问题。"
+		return "请具体些。"
 	}
 
 	// 2.如果用户有配置前缀，加上前缀

@@ -1,21 +1,3 @@
-#FROM golang:1.17.10 AS builder
-#
-## ENV GOPROXY      https://goproxy.io
-#
-#RUN mkdir /app
-#ADD . /app/
-#WORKDIR /app
-#RUN go build -o wechatbot .
-#
-#FROM centos:centos7
-#RUN mkdir /app
-#WORKDIR /app
-#COPY --from=builder /app/ .
-#RUN chmod +x wechatbot && cp config.dev.json config.json && yum -y install vim net-tools telnet wget curl && yum clean all
-#
-#CMD ./wechatbot
-
-# wechatbot/Dockerfile
 
 # 使用 golang 官方镜像提供 Go 运行环境，并且命名为 buidler 以便后续引用
 FROM golang:1.16-alpine as builder
@@ -58,8 +40,6 @@ WORKDIR /app
 # 而是从上一个阶段构建的 builder容器中拉取
 COPY --from=builder /app/wechatbot .
 ADD supervisord.conf /etc/supervisord.conf
-ADD config.dev.json /app/config.dev.json
-RUN cp config.dev.json config.json
 
 # 通过 Supervisor 管理服务
 CMD ["/usr/bin/supervisord", "-c", "/etc/supervisord.conf"]

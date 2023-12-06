@@ -2,16 +2,17 @@ package config
 
 import (
 	"encoding/json"
-	"github.com/qingconglaixueit/abing_logger"
 	"log"
 	"os"
-	"strconv"
 	"sync"
 	"time"
+
+	"github.com/qingconglaixueit/abing_logger"
 )
 
 // Configuration 项目配置
 type Configuration struct {
+	BaseURL string `json:"base_url"`
 	// gpt apikey
 	ApiKey string `json:"api_key"`
 	// 自动通过好友
@@ -28,12 +29,6 @@ type Configuration struct {
 	ReplyPrefix string `json:"reply_prefix"`
 	// 清空会话口令
 	SessionClearToken string `json:"session_clear_token"`
-	// 每天工作起始时间
-	StartTime int `json:"start_time"`
-	// 每天工作结束时间
-	EndTime int `json:"end_time"`
-	// 每天请求次数
-	CurrentMaxReq int `json:"current_max_req"`
 }
 
 var config *Configuration
@@ -44,15 +39,13 @@ func LoadConfig() *Configuration {
 	once.Do(func() {
 		// 给配置赋默认值
 		config = &Configuration{
+			BaseURL:           "https://api.openai.com/v1/",
 			AutoPass:          false,
-			SessionTimeout:    60,
-			MaxTokens:         512,
-			Model:             "text-davinci-003",
-			Temperature:       0.9,
-			SessionClearToken: "下一个问题",
-			StartTime:         9,
-			EndTime:           21,
-			CurrentMaxReq:     10,
+			SessionTimeout:    600,
+			MaxTokens:         1024,
+			Model:             "gpt-3.5-turbo",
+			Temperature:       0.5,
+			SessionClearToken: "会话清空",
 		}
 
 		// 判断配置文件是否存在，存在直接JSON读取
@@ -72,82 +65,14 @@ func LoadConfig() *Configuration {
 			}
 		}
 		// 有环境变量使用环境变量
+		BaseURL := os.Getenv("BASE_URL")
 		ApiKey := os.Getenv("APIKEY")
-		AutoPass := os.Getenv("AUTO_PASS")
-		SessionTimeout := os.Getenv("SESSION_TIMEOUT")
-		Model := os.Getenv("MODEL")
-		MaxTokens := os.Getenv("MAX_TOKENS")
-		Temperature := os.Getenv("TEMPREATURE")
-		ReplyPrefix := os.Getenv("REPLY_PREFIX")
-		SessionClearToken := os.Getenv("SESSION_CLEAR_TOKEN")
-		StartTime := os.Getenv("START_TIME")
-		EndTime := os.Getenv("END_TIME")
-		CurrentMaxReq := os.Getenv("CurrentMaxReq")
+
+		if BaseURL != "" {
+			config.BaseURL = BaseURL
+		}
 		if ApiKey != "" {
 			config.ApiKey = ApiKey
-		}
-		if AutoPass == "true" {
-			config.AutoPass = true
-		}
-		if SessionTimeout != "" {
-			duration, err := time.ParseDuration(SessionTimeout)
-			if err != nil {
-				abing_logger.SugarLogger.Errorf("config session timeout err: %v ,get is %v", err, SessionTimeout)
-				return
-			}
-			config.SessionTimeout = duration
-		}
-		if Model != "" {
-			config.Model = Model
-		}
-		if MaxTokens != "" {
-			max, err := strconv.Atoi(MaxTokens)
-			if err != nil {
-				abing_logger.SugarLogger.Errorf("config MaxTokens err: %v ,get is %v", err, MaxTokens)
-				return
-			}
-			config.MaxTokens = uint(max)
-		}
-		if Temperature != "" {
-			temp, err := strconv.ParseFloat(Temperature, 64)
-			if err != nil {
-				abing_logger.SugarLogger.Errorf("config Temperature err: %v ,get is %v", err, Temperature)
-				return
-			}
-			config.Temperature = temp
-		}
-		if ReplyPrefix != "" {
-			config.ReplyPrefix = ReplyPrefix
-		}
-		if SessionClearToken != "" {
-			config.SessionClearToken = SessionClearToken
-		}
-
-		if StartTime != "" {
-			sTime, err := strconv.Atoi(StartTime)
-			if err != nil {
-				abing_logger.SugarLogger.Errorf("StartTime=%s  strconv.Atoi error:%+v", StartTime, err)
-			} else {
-				config.StartTime = sTime
-			}
-		}
-
-		if EndTime != "" {
-			eTime, err := strconv.Atoi(EndTime)
-			if err != nil {
-				abing_logger.SugarLogger.Errorf("EndTime=%s  strconv.Atoi error:%+v", EndTime, err)
-			} else {
-				config.EndTime = eTime
-			}
-		}
-
-		if CurrentMaxReq != ""{
-			crq, err := strconv.Atoi(CurrentMaxReq)
-			if err != nil {
-				abing_logger.SugarLogger.Errorf("config CurrentMaxReq err: %v ,get is %v", err, CurrentMaxReq)
-				return
-			}
-			config.CurrentMaxReq = int(crq)
 		}
 
 	})

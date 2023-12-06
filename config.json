@@ -1,13 +1,11 @@
 {
-  "api_key": "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",
+  "base_url": "http://host.docker.internal:3928/v1/",
+  "api_key": "sk-xxx11",
   "auto_pass": false,
-  "session_timeout": 60,
+  "session_timeout": 600,
   "max_tokens": 1024,
-  "model": "text-davinci-003",
-  "temperature": 1,
-  "reply_prefix": "来自 AI BOT 回复：",
-  "session_clear_token": "清空会话",
-  "start_time": 9,
-  "end_time": 23,
-  "current_max_req": 80
+  "model": "gpt-3.5-turbo",
+  "temperature": 0.5,
+  "reply_prefix": "",
+  "session_clear_token": "清空会话"
 }
