@@ -26,7 +26,7 @@
 
 # 使用前提
 
-> * 有openai账号，并且创建好api_key，注册事项可以参考[此文章](https://juejin.cn/post/7173447848292253704)。
+> * 有chatgpt账号，并且创建好api_key，订阅 chatgpt plus使用此[开卡服务](https://bewildcard.com/i/BIN59),不被风控,亲测有效。
 > * 也可以介入local LLM + OpenAI-compatible api 推荐[轻量化openai inference engine](https://github.com/janhq/nitro)
 > * 微信必须实名认证。
 
